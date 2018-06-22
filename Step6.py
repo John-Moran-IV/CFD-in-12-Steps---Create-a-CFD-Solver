@@ -1,0 +1,78 @@
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import pyplot, cm
+import numpy
+
+nx = 101  # Set grid number in the x-dir.
+ny = 101  # Set grid number in the y-dir.
+nt = 80  # Set the number of time steps.
+c = 1  # Set the wave speed.
+dx = 2 / (nx - 1)  # Set the spacial distance between x-dir grid points.
+dy = 2 / (ny - 1)  # Set the spacial distance between y-dir grid points.
+sigma = 0.2  # Set the Courant/CFL number.
+dt = sigma * dx  # The time step duration is a function of the
+# Courant number and the spacial distance in x.
+
+x = numpy.linspace(0, 2, nx)  # Create 'nx' x-dir grid points, from 0 to 2.
+y = numpy.linspace(0, 2, ny)  # Create 'ny' y-dir grid points, from 0 to 2.
+
+u = numpy.ones((ny, nx))  # Create a grid matrix with dimensions ny x nx.
+v = numpy.ones((ny, nx))  # Create a grid matrix with dimensions ny x nx.
+un = numpy.ones((ny, nx))  # Creating place holder matrix for u.
+vn = numpy.ones((ny, nx))  # Creating place holder matrix for v.
+
+# Assign initial conditions:
+# Set hat function I.C. : u(.5<=x<=1 && .5<=y<=1 ) is 2.
+u[int(.5 / dy):int(1 / dy + 1), int(.5 / dx):int(1 / dx + 1)] = 2
+
+# Set hat function I.C. : u(.5<=x<=1 && .5<=y<=1 ) is 2.
+v[int(.5 / dy):int(1 / dy + 1), int(.5 / dx):int(1 / dx + 1)] = 2
+
+# Setting plot parameters for the IC/BC visual representation.
+fig = pyplot.figure(figsize=(11, 7), dpi=100)  # Set plot size and resolution.
+ax = fig.gca(projection='3d')  # Project the surface in 3D.
+X, Y = numpy.meshgrid(x, y)  # Takes values of x and y then makes X, Y pairs.
+# in a rectangular grid of dimension x by y.
+
+ax.plot_surface(X, Y, u, cmap=cm.viridis, rstride=2, cstride=2)
+ax.set_xlabel('$x$')
+ax.set_ylabel('$y$')
+
+for n in range(nt + 1):  # Loop through time steps from 1 to nt.
+    un = u.copy()
+    vn = v.copy()
+    u[1:, 1:] = (un[1:, 1:] -
+                 (un[1:, 1:] * c * dt / dx * (un[1:, 1:] - un[1:, :-1])) -
+                 vn[1:, 1:] * c * dt / dy * (un[1:, 1:] - un[:-1, 1:]))
+    v[1:, 1:] = (vn[1:, 1:] -
+                 (un[1:, 1:] * c * dt / dx * (vn[1:, 1:] - vn[1:, :-1])) -
+                 vn[1:, 1:] * c * dt / dy * (vn[1:, 1:] - vn[:-1, 1:]))
+
+    # Making the edges of the convection matrix all 1's.
+    u[0, :] = 1
+    u[-1, :] = 1
+    u[:, 0] = 1
+    u[:, -1] = 1
+
+    # Making the edges of the diffusion matrix all 1's.
+    v[0, :] = 1
+    v[-1, :] = 1
+    v[:, 0] = 1
+    v[:, -1] = 1
+
+fig = pyplot.figure(figsize=(11, 7), dpi=100)  # Set plot size and resolution.
+ax = fig.gca(projection='3d')  # Project the object in 3D.
+X, Y = numpy.meshgrid(x, y)  # Takes values of x and y then makes X, Y pairs.
+# Plots a surface in 3D, where the Z axis' are the UPDATED 'u' and 'v' values.
+
+ax.plot_surface(X, Y, u, cmap=cm.viridis, rstride=2, cstride=2)
+ax.set_xlabel('$x$')  # Set the x-dir axis label as 'x'.
+ax.set_ylabel('$y$')  # Set the x-dir axis label as 'y'.
+
+fig = pyplot.figure(figsize=(11, 7), dpi=100)  # Set plot size and resolution.
+ax = fig.gca(projection='3d')  # Project the object in 3D.
+X, Y = numpy.meshgrid(x, y)  # Takes values of x and y then makes X, Y pairs.
+# Plots a surface in 3D, where the Z axis' are the UPDATED 'u' and 'v' values.
+ax.plot_surface(X, Y, v, cmap=cm.viridis, rstride=2, cstride=2)
+ax.set_xlabel('$x$')  # Set the x-dir axis label as 'x'.
+ax.set_ylabel('$y$')  # Set the x-dir axis label as 'y'.
+pyplot.show()  # Display the plot of the hat function.
